@@ -1,77 +1,90 @@
 import numpy as np
 
-def lu_decomposition(A):
+def lu_decomposition(A, eps):
     n = len(A)
-    L = np.eye(n)
-    U = A.copy()
+    L = np.zeros((n,n))
+    U = np.zeros((n,n))
 
-    for k in range(n - 1):
-        for i in range(k + 1, n):
-            factor = U[i, k] / U[k, k]
-            L[i, k] = factor
-            U[i, k:] -= factor * U[k, k:]
-
+    for i in range(n):
+        for j in range(i, n):
+            U[i, j] = A[i, j] - sum(L[i, k] * U[k, j] for k in range(i))
+            if i == j:
+                L[i, i] = 1
+            else:
+                if np.abs(U[i, i]) > eps:
+                    L[j, i] = (A[j, i] - sum(L[j, k] * U[k, i] for k in range(i))) / U[i, i]
+                else:
+                    print("Division cannot be done")
+                    return None, None
     return L, U
 
-
-def determinant_LU(L, U):
-    return np.prod(np.diag(L)) * np.prod(np.diag(U))
-
-
-def forward_substitution(L, b):
+def forward_substitution(L, b, eps):
     n = len(b)
     y = np.zeros_like(b, dtype=float)
 
     for i in range(n):
-        y[i] = (b[i] - np.dot(L[i, :i], y[:i])) / L[i, i]
+        if np.abs(L[i, i]) > eps:
+            y[i] = (b[i] - np.dot(L[i, :i], y[:i])) / L[i, i]
+        else:
+            print("Division cannot be done")
+            return None
 
     return y
 
-
-def backward_substitution(U, y):
+def backward_substitution(U, y, eps):
     n = len(y)
     x = np.zeros_like(y, dtype=float)
 
     for i in range(n - 1, -1, -1):
-        x[i] = (y[i] - np.dot(U[i, i + 1:], x[i + 1:])) / U[i, i]
+        if np.abs(U[i, i]) > eps:
+            x[i] = (y[i] - np.dot(U[i, i + 1:], x[i + 1:])) / U[i, i]
+        else:
+            print("Division cannot be done")
+            return None
 
     return x
-
 
 def check_solution(A_init, b_init, x_LU):
     norm = np.linalg.norm(A_init @ x_LU - b_init, ord=2)
     return norm
 
-
 def main():
     # Input data
     n = int(input("Enter the size of the system (n): "))
-    epsilon = float(input("Enter the precision of the calculations (epsilon): "))
+    t = int(input("Enter the precision of the calculations (t): "))
+    epsilon = 10 ** (-t)
 
     # Generate random matrix A and vector b for testing
-    A_init = np.random.rand(n, n)
-    b_init = np.random.rand(n)
+    A_init = np.array([[1,2,1,1], [1,4,-1,7], [4,9,5,11],[1,0,6,4]])
+    b_init = np.array([0,20,18,1])
 
     # LU decomposition
-    L, U = lu_decomposition(A_init)
-
-    # Determinant of A
-    det_A = determinant_LU(L, U)
-    ####1. Calculate LU decomposition####
+    L, U = lu_decomposition(A_init, epsilon)
+    if L is None or U is None:
+        return
 
     # Solve the system using LU decomposition
-    y = forward_substitution(L, b_init)
-    x_LU = backward_substitution(U, y)
-    ####3. Using LU decomposition, calculate the solution x_LU####
+    y = forward_substitution(L, b_init, epsilon)
+    if y is None:
+        return
+    x_LU = backward_substitution(U, y, epsilon)
+    if x_LU is None:
+        return
+
+    # Calculate the determinant of A
+    determinat = np.prod(np.diag(U))*np.prod(np.diag(L))
 
     # Check the solution
     norm_check = check_solution(A_init, b_init, x_LU)
     print(f"Norm check: {norm_check}")
-    ####4. Check the calculated solution####
 
-    # Display solution and inverse
+    # Calculate the solution using numpy's built-in function and the inverse of A
     x_lib = np.linalg.solve(A_init, b_init)
     A_inv_lib = np.linalg.inv(A_init)
+
+    # Calculate the norms
+    norm_x_diff = np.linalg.norm(x_LU - x_lib, ord=2)
+    norm_xLU_Ainvlib_diff = np.linalg.norm(x_LU - A_inv_lib @ b_init, ord=2)
 
     # Display results
     print("\nResults:")
@@ -80,21 +93,21 @@ def main():
     print(L)
     print("\nU matrix:")
     print(U)
-    print("\nDeterminant of A:", det_A)
+
+    print("\n Determinant of L:", np.prod(np.diag(L)))
+    print("\n Determinant of U:", np.prod(np.diag(U)))
+    print("#######################################################################")
+    print("\n Determinant of A:")
+    print(determinat)
 
     print("\nSolution using LU decomposition (x_LU):", x_LU)
-    ####2. Display the solution using LU decomposition####
-
     print("\nSolution using NumPy library (x_lib):", x_lib)
+    print("\nInverse of A using NumPy library (A_inv_lib):", A_inv_lib)
 
-    # Check the solutions
-    norm_x_diff = np.linalg.norm(x_LU - x_lib, ord=2)
-    norm_xLU_Ainvlib_diff = np.linalg.norm(x_LU - A_inv_lib @ b_init, ord=2)
 
-    print("\nSolution Comparison:")
+    print("\nNorms:")
     print("||x_LU - x_lib||_2:", norm_x_diff)
-    print("||x_LU - A_inv_lib * b_init||_2:", norm_xLU_Ainvlib_diff)
-
+    print("||x_LU - ((A^-1)_lib)*b_init||_2:", norm_xLU_Ainvlib_diff)
 
 if __name__ == "__main__":
     main()
