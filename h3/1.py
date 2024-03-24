@@ -1,7 +1,6 @@
 import numpy as np
 
 def get_epsilon():
-  """Prompts user for precision (epsilon) and validates input."""
   while True:
     try:
       t = int(input("Enter precision (t, for epsilon=10^(-t)): "))
@@ -13,7 +12,6 @@ def get_epsilon():
       print("Invalid input. Please enter an integer.")
 
 def is_zero(x, eps):
-  """Checks if a number is zero within the given precision."""
   return abs(x) <= eps
 
 def generate_random_data(n):
@@ -73,6 +71,33 @@ def compare_inverse_norm(A_inv_householder, A_inv_bibl):
     norm_diff = np.linalg.norm(A_inv_householder - A_inv_bibl, ord=2)
     return norm_diff
 
+def calculate_reflection_matrix(v):
+    n = len(v)
+    I = np.eye(n)
+    v = v.reshape(n, 1)
+    H = I - 2 * np.dot(v, v.T)
+    return H
+
+def householder_qr_decomposition_reflection(A):
+    n = A.shape[0]
+    R = np.copy(A)
+    Q = np.eye(n)
+
+    for k in range(n - 1):
+        x = R[k:, k]
+        v = np.zeros_like(x)
+        v[0] = np.sign(x[0]) * np.linalg.norm(x)
+        v = v + x
+        v = v / np.linalg.norm(v)
+
+        H = calculate_reflection_matrix(v)
+        print(f"Reflection matrix for column {k}:\n", H)
+
+        R[k:, k:] = R[k:, k:] - 2 * np.outer(v, np.dot(v, R[k:, k:]))
+        Q[k:, :] = Q[k:, :] - 2 * np.outer(v, np.dot(v, Q[k:, :]))
+
+    return Q, R
+
 def main():
     n = int(input("Enter the size n of the data: "))
     eps = get_epsilon()
@@ -82,6 +107,13 @@ def main():
     print("Matrix A_init:", A_init)
     print("Vector s:", s)
     print("Vector b_init:", b_init)
+
+
+    #print reflexion matrixes and compare with householder_qr_decomposition_reflection
+    print("Householder QR decomposition with reflection matrixes:")
+    QR_Householder_reflection = householder_qr_decomposition_reflection(A_init)
+    print ("Q:\n", QR_Householder_reflection[0])
+    print ("R:\n", QR_Householder_reflection[1])
 
 
     # Task 2
