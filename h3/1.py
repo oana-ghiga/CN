@@ -52,7 +52,7 @@ def solve_linear_system(QR, b):
 
 def calculate_errors(A_init, b_init, x_Householder, x_QR, s):
     error_qr_householder = np.linalg.norm(x_QR - x_Householder, ord=2)
-    error_Ax_householder = np.linalg.norm(np.dot(A_init, x_Householder) - b_init, ord=2)
+    error_Ax_householder = np.linalg.norm(np.dot(A_init, x_Householder[:, None]) - b_init, ord=2)
     error_Ax_qr = np.linalg.norm(np.dot(A_init, x_QR) - b_init, ord=2)
     relative_error_householder = np.linalg.norm(x_Householder - s, ord=2) / np.linalg.norm(s, ord=2)
     relative_error_qr = np.linalg.norm(x_QR - s, ord=2) / np.linalg.norm(s, ord=2)
@@ -91,12 +91,15 @@ def householder_qr_decomposition_reflection(A):
         v = v / np.linalg.norm(v)
 
         H = calculate_reflection_matrix(v)
-        print(f"Reflection matrix for column {k}:\n", H)
+        padded_H = np.eye(n)
+        padded_H[k:, k:] = H
 
-        R[k:, k:] = R[k:, k:] - 2 * np.outer(v, np.dot(v, R[k:, k:]))
-        Q[k:, :] = Q[k:, :] - 2 * np.outer(v, np.dot(v, Q[k:, :]))
+        R = np.dot(padded_H, R)
+        Q = np.dot(Q, padded_H.T)
 
     return Q, R
+
+
 
 def main():
     n = int(input("Enter the size n of the data: "))
@@ -126,6 +129,7 @@ def main():
     error_qr_householder, error_Ax_householder, error_Ax_qr, relative_error_householder, relative_error_qr = calculate_errors(A_init, b_init, x_Householder, x_QR, s)
 
     # Task 4
+    print(f"A_init4", A_init)
     print(f"Error ||x_QR - x_Householder||2: {error_qr_householder}")
     print(f"Error ||(A_init)*(x_Householder) - (b_init)||2: {error_Ax_householder}")
     print(f"Error ||(A_init)*(x_QR) - (b_init)||2: {error_Ax_qr}")
