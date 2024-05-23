@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Function to calculate finite differences using Aitken's scheme
 def aitken(x, y):
     n = len(x)
@@ -41,7 +42,7 @@ def generate_nodes_and_values(x0, xn, n, f):
 def example_function(x):
     return np.sin(x)
 
-# Main function to perform interpolation and plot results
+# Main function
 def main():
     # Read input from the user
     x0 = float(input("Enter x0: "))
@@ -56,9 +57,17 @@ def main():
 
     # Perform interpolation using progressive Newton formula and Aitken's scheme
     F = aitken(x, y)
+
     interpolated_value_newton = progressive_newton(x, y, target_x, F)
+    # Read the new x value from the user
+    new_x = float(input("Enter the new x value: "))
+
+    # Calculate Ln(new_x) using the progressive Newton formula
+    ln_new_x = progressive_newton(x, y, new_x, F)
+
     print("Interpolated value using progressive Newton formula:", interpolated_value_newton)
     print("Absolute error using progressive Newton formula:", abs(interpolated_value_newton - example_function(target_x)))
+    print(f"Ln({new_x}) = {ln_new_x}")
 
     # Perform polynomial interpolation using least squares method
     m_values = range(1, 6)
