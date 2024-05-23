@@ -8,14 +8,14 @@ def read_csc_matrix(filename):
     with open(filename, 'r') as f:
         for line in f:
             values = line.split(',')
-            if len(values) != 3:  # Skip lines that do not contain exactly three values
+            if len(values) != 3:  # skip lines that do not contain exactly three values
                 continue
             val, i, j = map(float, values)
             data.append(val)
             rows.append(int(i))
             cols.append(int(j))
-    m = max(rows) + 1  # assuming rows are 0-indexed
-    n = max(cols) + 1  # assuming cols are 0-indexed
+    m = max(rows) + 1 
+    n = max(cols) + 1 
     return csc_matrix((data, (rows, cols)), shape=(m, n))
 def add_csc_matrices(A, B):
     return A + B
@@ -37,6 +37,6 @@ if __name__ == "__main__":
     C = add_csc_matrices(A, B)
 
     if verify_csc_matrices_equality(C, AplusB):
-        print("The computed sum of matrices from files a.txt and b.txt is equal to the matrix from file aplusb.txt.")
+        print("the computed sum of matrices from files a.txt and b.txt is equal to the matrix from file aplusb.txt.")
     else:
-        print("The computed sum of matrices from files a.txt and b.txt is not equal to the matrix from file aplusb.txt.")
+        print("the computed sum of matrices from files a.txt and b.txt is not equal to the matrix from file aplusb.txt.")
